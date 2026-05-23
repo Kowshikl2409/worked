@@ -13,12 +13,15 @@ import {
    having to define dozens of Tailwind hover: classes for
    CSS-var–based colors that Tailwind can't see at build time)
 ───────────────────────────────────────────────────────────── */
+
 function hoverBtn(hoverBg = 'rgba(255,255,255,0.05)', hoverColor = 'var(--c-text)') {
   return {
     onMouseEnter: e => { e.currentTarget.style.background = hoverBg; e.currentTarget.style.color = hoverColor; },
     onMouseLeave: e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--c-muted)'; },
   };
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -39,27 +42,27 @@ export default function Dashboard() {
   useEffect(() => { localStorage.setItem('nexus_sidebar_open', JSON.stringify(sidebarOpen)); }, [sidebarOpen]);
 
   /* ── Navigation ───────────────────────────────────────────── */
-  const [activeTab, setActiveTab]       = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
 
   /* ── Orders & Filters ─────────────────────────────────────── */
-  const [orders, setOrders]             = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [statusFilter, setStatusFilter] = useState('All');
-  const [searchQuery, setSearchQuery]   = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   /* ── Modals ───────────────────────────────────────────────── */
-  const [selectedOrder, setSelectedOrder]   = useState(null);
-  const [isEditMode, setIsEditMode]         = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   /* ── Edit form ────────────────────────────────────────────── */
-  const [editPartName,   setEditPartName]   = useState('');
-  const [editMaterial,   setEditMaterial]   = useState('');
-  const [editQuantity,   setEditQuantity]   = useState('');
-  const [editDeadline,   setEditDeadline]   = useState('');
+  const [editPartName, setEditPartName] = useState('');
+  const [editMaterial, setEditMaterial] = useState('');
+  const [editQuantity, setEditQuantity] = useState('');
+  const [editDeadline, setEditDeadline] = useState('');
   const [editDimensions, setEditDimensions] = useState('');
-  const [editStatus,     setEditStatus]     = useState('Received');
+  const [editStatus, setEditStatus] = useState('Received');
   const [newQualityNoteText, setNewQualityNoteText] = useState('');
 
   /* ── Chat ─────────────────────────────────────────────────── */
@@ -69,7 +72,7 @@ export default function Dashboard() {
     timestamp: new Date().toISOString()
   }]);
   const [inputMessage, setInputMessage] = useState('');
-  const [chatLoading, setChatLoading]   = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
 
   /* ── Rotating chat placeholder ───────────────────────────── */
   const CHAT_EXAMPLES = [
@@ -90,7 +93,7 @@ export default function Dashboard() {
     try { return JSON.parse(localStorage.getItem('nexus_notifications')) || []; }
     catch { return []; }
   });
-  const [bellOpen, setBellOpen]               = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const chatEndRef = useRef(null);
 
@@ -100,11 +103,11 @@ export default function Dashboard() {
   const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
-      const res  = await fetch('http://localhost:5000/api/orders');
+      const res = await fetch(`${API_BASE_URL}/api/orders`);
       const data = await res.json();
       if (data.success) setOrders(data.orders);
     } catch { setOrders(JSON.parse(localStorage.getItem('orders')) || []); }
-    finally  { setLoadingOrders(false); }
+    finally { setLoadingOrders(false); }
   };
   useEffect(() => { fetchOrders(); }, []);
   useEffect(() => { if (orders.length > 0) localStorage.setItem('orders', JSON.stringify(orders)); }, [orders]);
@@ -129,7 +132,7 @@ export default function Dashboard() {
     setChatMessages(prev => [...prev, { sender: 'user', text: userMsg, timestamp: new Date().toISOString() }]);
     setChatLoading(true);
     try {
-      const res  = await fetch('http://localhost:5000/api/chat', {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMsg })
       });
@@ -147,7 +150,7 @@ export default function Dashboard() {
           if (selectedOrder?.id === order_id) { const u = data.orders.find(o => o.id === order_id); if (u) setSelectedOrder(u); }
         } else if (intent === 'edit_order') {
           pushNotification(`Order #${order_id} edited`, `Order #${order_id}`);
-          if (selectedOrder?.id === order_id) { const u = data.orders.find(o => o.id === order_id); if (u) { setSelectedOrder(u); setEditPartName(u.part_name||''); setEditMaterial(u.material||''); setEditQuantity(u.quantity||''); setEditDeadline(u.deadline||''); setEditDimensions(u.dimensions||''); setEditStatus(u.status||'Received'); } }
+          if (selectedOrder?.id === order_id) { const u = data.orders.find(o => o.id === order_id); if (u) { setSelectedOrder(u); setEditPartName(u.part_name || ''); setEditMaterial(u.material || ''); setEditQuantity(u.quantity || ''); setEditDeadline(u.deadline || ''); setEditDimensions(u.dimensions || ''); setEditStatus(u.status || 'Received'); } }
         } else if (intent === 'delete_order') setDeleteConfirmId(order_id);
         if (intent === 'query_orders') { setStatusFilter(data.extraction.status_filter || 'All'); setActiveTab('dashboard'); }
         setChatMessages(prev => [...prev, { sender: 'assistant', text: data.message, timestamp: new Date().toISOString() }]);
@@ -171,9 +174,9 @@ export default function Dashboard() {
     if (e) e.preventDefault();
     if (!selectedOrder) return;
     try {
-      const res  = await fetch(`http://localhost:5000/api/orders/${selectedOrder.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${selectedOrder.id}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ part_name: editPartName||null, material: editMaterial||null, quantity: editQuantity ? parseInt(editQuantity,10) : null, deadline: editDeadline||null, dimensions: editDimensions||null, status: editStatus })
+        body: JSON.stringify({ part_name: editPartName || null, material: editMaterial || null, quantity: editQuantity ? parseInt(editQuantity, 10) : null, deadline: editDeadline || null, dimensions: editDimensions || null, status: editStatus })
       });
       const data = await res.json();
       if (data.success) {
@@ -190,7 +193,7 @@ export default function Dashboard() {
     if (e) e.preventDefault();
     if (!selectedOrder || !newQualityNoteText.trim()) return;
     try {
-      const res  = await fetch(`http://localhost:5000/api/orders/${selectedOrder.id}/quality`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${selectedOrder.id}/quality`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ quality_note: newQualityNoteText })
       });
@@ -207,7 +210,7 @@ export default function Dashboard() {
 
   const handleDeleteOrder = async (id) => {
     try {
-      const res  = await fetch(`http://localhost:5000/api/orders/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API_BASE_URL}/api/orders/${id}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);
@@ -219,7 +222,7 @@ export default function Dashboard() {
 
   /* ── Filter ───────────────────────────────────────────────── */
   const filteredOrders = orders.filter(order => {
-    const q  = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase();
     const ms = (order.part_name?.toLowerCase().includes(q)) || (order.material?.toLowerCase().includes(q)) || order.id.toString() === searchQuery.trim();
     const mf = statusFilter === 'All' || order.status?.toLowerCase() === statusFilter.toLowerCase();
     return ms && mf;
@@ -228,22 +231,22 @@ export default function Dashboard() {
   /* ── Status meta ──────────────────────────────────────────── */
   const statusMeta = (s) => {
     switch ((s || '').toLowerCase()) {
-      case 'accepted':  return { cls: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 badge-accepted', dot: 'bg-emerald-400' };
-      case 'in review': return { cls: 'text-amber-400 bg-amber-400/10 border-amber-400/20 badge-review',    dot: 'bg-amber-400'   };
-      default:          return { cls: 'text-slate-400 bg-slate-400/10 border-slate-400/20',                  dot: 'bg-slate-500'   };
+      case 'accepted': return { cls: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 badge-accepted', dot: 'bg-emerald-400' };
+      case 'in review': return { cls: 'text-amber-400 bg-amber-400/10 border-amber-400/20 badge-review', dot: 'bg-amber-400' };
+      default: return { cls: 'text-slate-400 bg-slate-400/10 border-slate-400/20', dot: 'bg-slate-500' };
     }
   };
 
   /* ── Desktop nav items ────────────────────────────────────── */
   const navItems = [
-    { id: 'dashboard', label: 'Workspace',       icon: MessageSquare },
-    { id: 'database',  label: 'Orders Database', icon: Database       },
-    { id: 'quality',   label: 'Quality Logs',    icon: ClipboardList  },
+    { id: 'dashboard', label: 'Workspace', icon: MessageSquare },
+    { id: 'database', label: 'Orders Database', icon: Database },
+    { id: 'quality', label: 'Quality Logs', icon: ClipboardList },
   ];
 
   /* ── Mobile bottom-nav active state ──────────────────────── */
   const mobileActiveId = (() => {
-    if (activeTab === 'dashboard' && mobileChatOpen)  return 'chat';
+    if (activeTab === 'dashboard' && mobileChatOpen) return 'chat';
     if (activeTab === 'dashboard' && !mobileChatOpen) return 'orders';
     return activeTab;
   })();
@@ -253,7 +256,7 @@ export default function Dashboard() {
   ───────────────────────────────────────────────────────── */
   const applyStatusChange = async (orderId, st) => {
     try {
-      const res  = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: st })
       });
@@ -501,7 +504,7 @@ export default function Dashboard() {
                       </div>
                       <div className="px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1.5"
                         style={{ background: 'var(--c-msg-ai)', border: '1px solid var(--c-msg-ai-br)' }}>
-                        {[0,150,300].map(d => <div key={d} className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+                        {[0, 150, 300].map(d => <div key={d} className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
                       </div>
                     </div>
                   )}
@@ -547,7 +550,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-0.5 p-1 rounded-xl border"
                       style={{ background: 'var(--c-card)', borderColor: 'var(--c-border)' }}>
                       <SlidersHorizontal className="w-3 h-3 mx-1" style={{ color: 'var(--c-dimmed)' }} />
-                      {['All','Received','In Review','Accepted'].map(s => (
+                      {['All', 'Received', 'In Review', 'Accepted'].map(s => (
                         <button key={s} onClick={() => setStatusFilter(s)}
                           className={`px-2 md:px-3 py-1.5 rounded-lg text-[10px] md:text-[11px] font-semibold transition-all cursor-pointer ${statusFilter === s ? 'bg-blue-500/15 text-blue-400' : ''}`}
                           style={{ color: statusFilter === s ? undefined : 'var(--c-muted)' }}>
@@ -681,7 +684,7 @@ export default function Dashboard() {
                     <table className="w-full text-left border-collapse" style={{ minWidth: 680 }}>
                       <thead>
                         <tr className="border-b" style={{ background: 'var(--c-thead)', borderColor: 'var(--c-border)' }}>
-                          {['ID','Part Name','Material','Qty','Dimensions','Deadline','Status','Created'].map(h => (
+                          {['ID', 'Part Name', 'Material', 'Qty', 'Dimensions', 'Deadline', 'Status', 'Created'].map(h => (
                             <th key={h} className="py-3.5 px-4 md:px-5 text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--c-dimmed)' }}>{h}</th>
                           ))}
                         </tr>
@@ -790,10 +793,10 @@ export default function Dashboard() {
       <nav className="md:hidden flex items-stretch border-t flex-shrink-0 z-20"
         style={{ background: 'var(--c-surface)', backdropFilter: 'blur(20px)', borderColor: 'var(--c-border)' }}>
         {[
-          { id: 'chat',     label: 'Chat',     icon: Bot,          action: () => { setActiveTab('dashboard'); setMobileChatOpen(true);  } },
-          { id: 'orders',   label: 'Orders',   icon: Package,      action: () => { setActiveTab('dashboard'); setMobileChatOpen(false); } },
-          { id: 'database', label: 'Database', icon: Database,     action: () => { setActiveTab('database');  setMobileChatOpen(false); } },
-          { id: 'quality',  label: 'Quality',  icon: ClipboardList, action: () => { setActiveTab('quality');   setMobileChatOpen(false); } },
+          { id: 'chat', label: 'Chat', icon: Bot, action: () => { setActiveTab('dashboard'); setMobileChatOpen(true); } },
+          { id: 'orders', label: 'Orders', icon: Package, action: () => { setActiveTab('dashboard'); setMobileChatOpen(false); } },
+          { id: 'database', label: 'Database', icon: Database, action: () => { setActiveTab('database'); setMobileChatOpen(false); } },
+          { id: 'quality', label: 'Quality', icon: ClipboardList, action: () => { setActiveTab('quality'); setMobileChatOpen(false); } },
         ].map(({ id, label, icon: Icon, action }) => {
           const isActive = id === mobileActiveId;
           return (
@@ -857,10 +860,10 @@ export default function Dashboard() {
                   <form onSubmit={handleSaveEdit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label: 'Part Name', value: editPartName, set: setEditPartName, placeholder: 'e.g. Flanges', type: 'text',   min: undefined },
-                        { label: 'Material',  value: editMaterial,  set: setEditMaterial,  placeholder: 'e.g. Titanium', type: 'text', min: undefined },
-                        { label: 'Quantity',  value: editQuantity,  set: setEditQuantity,  placeholder: '100',  type: 'number', min: '1' },
-                        { label: 'Deadline',  value: editDeadline,  set: setEditDeadline,  placeholder: '',     type: 'date',   min: undefined },
+                        { label: 'Part Name', value: editPartName, set: setEditPartName, placeholder: 'e.g. Flanges', type: 'text', min: undefined },
+                        { label: 'Material', value: editMaterial, set: setEditMaterial, placeholder: 'e.g. Titanium', type: 'text', min: undefined },
+                        { label: 'Quantity', value: editQuantity, set: setEditQuantity, placeholder: '100', type: 'number', min: '1' },
+                        { label: 'Deadline', value: editDeadline, set: setEditDeadline, placeholder: '', type: 'date', min: undefined },
                       ].map(({ label, value, set, placeholder, type, min }) => (
                         <div key={label}>
                           <label className="block text-[9px] uppercase tracking-widest font-bold mb-1.5" style={{ color: 'var(--c-muted)' }}>{label}</label>
@@ -878,7 +881,7 @@ export default function Dashboard() {
                     <div>
                       <label className="block text-[9px] uppercase tracking-widest font-bold mb-2" style={{ color: 'var(--c-muted)' }}>Status</label>
                       <div className="flex gap-2">
-                        {['Received','In Review','Accepted'].map(st => {
+                        {['Received', 'In Review', 'Accepted'].map(st => {
                           const active = editStatus === st;
                           return (
                             <button key={st} type="button" onClick={() => setEditStatus(st)}
@@ -900,9 +903,9 @@ export default function Dashboard() {
                     {/* Specs grid */}
                     <div className="grid grid-cols-2 gap-3 pb-5 border-b" style={{ borderColor: 'var(--c-border-s)' }}>
                       {[
-                        { label: 'Status',     content: <span className={`text-[10px] font-bold border px-2.5 py-1 rounded-full ${statusMeta(selectedOrder.status).cls}`}>{selectedOrder.status}</span> },
-                        { label: 'Material',   content: <span className="text-[14px] font-bold" style={{ color: 'var(--c-text)' }}>{selectedOrder.material || '—'}</span> },
-                        { label: 'Quantity',   content: <span className="text-[14px] font-bold font-mono" style={{ color: 'var(--c-text)' }}>{selectedOrder.quantity} <span className="text-[11px] font-normal" style={{ color: 'var(--c-muted)' }}>units</span></span> },
+                        { label: 'Status', content: <span className={`text-[10px] font-bold border px-2.5 py-1 rounded-full ${statusMeta(selectedOrder.status).cls}`}>{selectedOrder.status}</span> },
+                        { label: 'Material', content: <span className="text-[14px] font-bold" style={{ color: 'var(--c-text)' }}>{selectedOrder.material || '—'}</span> },
+                        { label: 'Quantity', content: <span className="text-[14px] font-bold font-mono" style={{ color: 'var(--c-text)' }}>{selectedOrder.quantity} <span className="text-[11px] font-normal" style={{ color: 'var(--c-muted)' }}>units</span></span> },
                         { label: 'Dimensions', content: <span className="text-[14px] font-bold" style={{ color: 'var(--c-text)' }}>{selectedOrder.dimensions || '—'}</span> },
                       ].map(({ label, content }) => (
                         <div key={label} className="rounded-xl p-3.5 border" style={{ background: 'var(--c-spec)', borderColor: 'var(--c-border-s)' }}>
@@ -1009,7 +1012,7 @@ export default function Dashboard() {
                             <div className="fixed inset-0 z-[70]" onClick={() => setStatusDropdownOpen(false)} />
                             <div className="absolute right-0 bottom-full mb-2 z-[80] rounded-xl overflow-hidden py-1"
                               style={{ background: 'var(--c-modal)', border: '1px solid rgba(59,130,246,0.3)', boxShadow: '0 16px 40px rgba(0,0,0,0.4)', minWidth: 148 }}>
-                              {['Received','In Review','Accepted'].map(st => (
+                              {['Received', 'In Review', 'Accepted'].map(st => (
                                 <button key={st}
                                   onClick={async () => { setStatusDropdownOpen(false); await applyStatusChange(selectedOrder.id, st); }}
                                   className="w-full text-left px-4 py-2.5 text-[12px] font-semibold transition-colors cursor-pointer"
