@@ -1,0 +1,13 @@
+{
+  "name": "manufacturing-ops-workspace",
+  "version": "1.0.0",
+  "description": "AI Manufacturing Operations Platform Workspace",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install --prefix server && npm install --prefix client",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "build-client": "npm run build --prefix client",
+    "test-nlp": "npm run test-nlp --prefix server"
+  }
+}

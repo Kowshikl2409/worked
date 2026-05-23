@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'DM Sans', 'Inter', 'system-ui', 'sans-serif';
+}
+
+
+
+/* ══════════════════════════════════════════════════════════════
+   CSS Custom Properties  (dark = default / root)
+══════════════════════════════════════════════════════════════ */
+:root, .dark {
+  color-scheme: dark;
+  --c-bg:         #05080f;
+  --c-surface:    rgba(8,12,23,0.9);
+  --c-surface2:   rgba(5,8,15,0.55);
+  --c-sidebar:    rgba(8,12,23,0.72);
+  --c-panel:      rgba(5,8,15,0.28);
+  --c-card:       rgba(13,21,36,0.75);
+  --c-card2:      rgba(13,21,36,0.55);
+  --c-input:      rgba(15,25,41,0.85);
+  --c-border:     rgba(26,37,64,0.78);
+  --c-border-s:   rgba(26,37,64,0.45);
+  --c-overlay:    rgba(2,4,10,0.82);
+  --c-overlay2:   rgba(2,4,10,0.92);
+  --c-modal:      rgba(8,12,23,0.99);
+  --c-spec:       rgba(5,8,15,0.52);
+  --c-qual:       rgba(139,92,246,0.05);
+  --c-qual-br:    rgba(139,92,246,0.13);
+  --c-msg-ai:     rgba(13,21,36,0.82);
+  --c-msg-ai-br:  rgba(26,37,64,0.72);
+  --c-notif:      rgba(8,12,23,0.97);
+  --c-table:      rgba(13,21,36,0.62);
+  --c-thead:      rgba(8,12,23,0.85);
+  --c-empty:      rgba(13,21,36,0.22);
+  --c-empty-icon: rgba(13,21,36,0.62);
+  --c-text:       #e8eaf2;
+  --c-text2:      #c4cedf;
+  --c-muted:      #6b7fa3;
+  --c-dimmed:     rgba(107,127,163,0.38);
+  --c-shine:      rgba(255,255,255,0.03);
+  --shadow-card:  none;
+  --shadow-modal: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.05);
+  --shadow-del:   0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(239,68,68,0.05);
+  --glow:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 80%,  rgba(139,92,246,0.08) 0%, transparent 70%);
+}
+
+.light {
+  color-scheme: light;
+  --c-bg:         #eef2ff;
+  --c-surface:    rgba(255,255,255,0.94);
+  --c-surface2:   rgba(240,245,255,0.9);
+  --c-sidebar:    rgba(248,250,255,0.97);
+  --c-panel:      rgba(248,250,255,0.6);
+  --c-card:       rgba(255,255,255,0.9);
+  --c-card2:      rgba(255,255,255,0.72);
+  --c-input:      rgba(240,244,255,0.95);
+  --c-border:     rgba(196,210,235,0.95);
+  --c-border-s:   rgba(196,210,235,0.55);
+  --c-overlay:    rgba(15,23,42,0.45);
+  --c-overlay2:   rgba(15,23,42,0.58);
+  --c-modal:      rgba(255,255,255,0.99);
+  --c-spec:       rgba(240,245,255,0.88);
+  --c-qual:       rgba(139,92,246,0.04);
+  --c-qual-br:    rgba(139,92,246,0.18);
+  --c-msg-ai:     rgba(241,244,255,0.92);
+  --c-msg-ai-br:  rgba(196,210,235,0.75);
+  --c-notif:      rgba(255,255,255,0.98);
+  --c-table:      rgba(255,255,255,0.88);
+  --c-thead:      rgba(240,244,255,0.95);
+  --c-empty:      rgba(255,255,255,0.55);
+  --c-empty-icon: rgba(203,213,235,0.85);
+  --c-text:       #0f172a;
+  --c-text2:      #334155;
+  --c-muted:      #64748b;
+  --c-dimmed:     rgba(100,116,139,0.6);
+  --c-shine:      rgba(255,255,255,0.55);
+  --shadow-card:  0 2px 12px rgba(59,130,246,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-modal: 0 24px 64px rgba(15,23,42,0.18), 0 1px 0 rgba(196,210,235,0.6);
+  --shadow-del:   0 24px 64px rgba(15,23,42,0.22), 0 1px 0 rgba(239,68,68,0.1);
+  --glow:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 80%,  rgba(139,92,246,0.04) 0%, transparent 70%);
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--c-bg);
+    color: var(--c-text);
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: var(--c-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #3B82F6; }
+
+/* ── Glow background ───────────────────────────────────────── */
+.bg-glow { background: var(--c-glow); }
+
+/* ── Input field ───────────────────────────────────────────── */
+.input-field {
+  background: var(--c-input);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  border-radius: 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-field:focus {
+  outline: none;
+  border-color: rgba(59,130,246,0.5);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08);
+}
+.input-field::placeholder { color: var(--c-dimmed); }
+
+/* ── Sidebar nav active ────────────────────────────────────── */
+.nav-active {
+  background: linear-gradient(90deg, rgba(59,130,246,0.12) 0%, transparent 100%);
+  border-left: 2px solid #3B82F6;
+}
+.light .nav-active {
+  background: linear-gradient(90deg, rgba(59,130,246,0.08) 0%, transparent 100%);
+}
+
+/* ── Hover glow ────────────────────────────────────────────── */
+.hover-glow:hover {
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 4px 24px rgba(59,130,246,0.07);
+}
+.light .hover-glow:hover {
+  box-shadow: var(--shadow-card), 0 0 0 1px rgba(59,130,246,0.22);
+}
+
+/* ── Card shine sweep ──────────────────────────────────────── */
+.card-shine { position: relative; overflow: hidden; }
+.card-shine::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--c-shine), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+.card-shine:hover::before { left: 140%; }
+
+/* ── Status badge glows ────────────────────────────────────── */
+.badge-accepted { box-shadow: 0 0 8px rgba(16,185,129,0.18); }
+.badge-review   { box-shadow: 0 0 8px rgba(245,158,11,0.18); }
