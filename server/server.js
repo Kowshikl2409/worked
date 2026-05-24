@@ -127,7 +127,85 @@ app.post('/api/chat', async (req, res) => {
 
       responseMessage = `✅ Order #${affectedOrder.id} created successfully.${details ? ' ' + details : ''} — deadline ${dateStr}${wasDefaulted ? ' (defaulted to today)' : ''}.`;
 
+    } else if (intent === 'create_multiple_orders') {
+      const ordersToCreate = Array.isArray(result.orders) ? result.orders : [];
+      if (ordersToCreate.length === 0) {
+        return res.json({ success: true, message: '❌ No orders found in your request.', extraction: result, orders: updatedOrders, affectedOrder: null });
+      }
+
+      const nowLocal = new Date();
+      const todayDateStr = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}`;
+      const todayLocal = new Date(); todayLocal.setHours(0, 0, 0, 0);
+
+      const createdOrders = [];
+      const errors = [];
+
+      for (const orderData of ordersToCreate) {
+        // Validate quantity
+        if (orderData.quantity !== null && orderData.quantity !== undefined) {
+          const qty = parseInt(orderData.quantity, 10);
+          if (isNaN(qty) || qty <= 0) {
+            errors.push(`Invalid quantity (${orderData.quantity}) for "${orderData.part_name || 'unknown part'}".`);
+            continue;
+          }
+        }
+
+        // Validate deadline — must not be in the past
+        if (orderData.deadline) {
+          const [dlYear, dlMonth, dlDay] = orderData.deadline.split('-').map(Number);
+          const deadlineLocal = new Date(dlYear, dlMonth - 1, dlDay);
+          if (deadlineLocal < todayLocal) {
+            const dl = deadlineLocal.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            errors.push(`Past deadline (${dl}) for "${orderData.part_name || 'unknown part'}".`);
+            continue;
+          }
+        }
+
+        const resolvedDeadline = orderData.deadline || todayDateStr;
+        const nextId = updatedOrders.length > 0 ? Math.max(...updatedOrders.map(o => o.id)) + 1 : 1;
+        const newOrder = {
+          id: nextId,
+          part_name: orderData.part_name || null,
+          material: orderData.material || null,
+          quantity: orderData.quantity ? parseInt(orderData.quantity, 10) : null,
+          deadline: resolvedDeadline,
+          dimensions: orderData.dimensions || null,
+          status: 'Received',
+          quality_notes: [],
+          notes: orderData.notes || null,
+          created_at: new Date().toISOString()
+        };
+        updatedOrders.push(newOrder);
+        createdOrders.push(newOrder);
+      }
+
+      if (createdOrders.length > 0) {
+        saveOrdersDirect(updatedOrders);
+        affectedOrder = createdOrders[createdOrders.length - 1];
+
+        const orderLines = createdOrders.map(o => {
+          const dl = new Date(o.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+          const details = [o.quantity, o.material, o.part_name].filter(Boolean).join(' ');
+          return `• Order #${o.id}: ${details} — due ${dl}`;
+        }).join('\n');
+
+        const errPart = errors.length > 0 ? `\n\n⚠️ Skipped:\n${errors.join('\n')}` : '';
+        responseMessage = `✅ ${createdOrders.length} order${createdOrders.length > 1 ? 's' : ''} created successfully:\n${orderLines}${errPart}`;
+      } else {
+        responseMessage = `❌ No orders could be created.\n${errors.join('\n')}`;
+      }
+
+      return res.json({
+        success: true,
+        message: responseMessage,
+        extraction: result,
+        orders: updatedOrders,
+        affectedOrder,
+        affectedOrders: createdOrders
+      });
+
     } else if (intent === 'update_status') {
+
       const orderId = parseInt(result.order_id, 10);
       const orderIndex = updatedOrders.findIndex(o => o.id === orderId);
 

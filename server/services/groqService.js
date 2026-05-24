@@ -11,45 +11,52 @@ Do not include any conversational text or markdown blocks (like \`\`\`json). Ret
 
 Supported Intents & Schema:
 
-1. "create_order":
+1. "create_order" -- when user requests a SINGLE order:
    - intent: "create_order"
-   - part_name: string or null (Only extract if explicitly mentioned. Do not guess, do not use generic placeholders)
-   - material: string or null (Only extract if mentioned)
-   - quantity: number or null (Only extract if mentioned)
-   - deadline: string or null (Extract the date exactly as written, e.g., "June 17", "July 20")
-   - dimensions: string or null (Only extract if mentioned)
-   - notes: string or null (Any custom instructions)
+   - part_name: string or null
+   - material: string or null
+   - quantity: number or null
+   - deadline: string or null (e.g. "July 20", "June 17")
+   - dimensions: string or null
+   - notes: string or null
 
-2. "update_status":
+2. "create_multiple_orders" -- when user requests TWO OR MORE orders in one message:
+   - intent: "create_multiple_orders"
+   - orders: array of order objects, each with:
+       { "part_name": ..., "material": ..., "quantity": ..., "deadline": ..., "dimensions": ..., "notes": ... }
+     (use null for any field not mentioned for that specific order)
+
+3. "update_status":
    - intent: "update_status"
-   - order_id: number or null (Extract the order ID)
+   - order_id: number or null
    - status: string or null (Must be exactly one of: "Received", "In Review", "Accepted")
 
-3. "quality_update":
+4. "quality_update":
    - intent: "quality_update"
    - order_id: number or null
    - quality_note: string or null
 
-4. "query_orders":
+5. "query_orders":
    - intent: "query_orders"
    - status_filter: string or null (Must be exactly one of: "Received", "In Review", "Accepted")
 
-5. "edit_order":
+6. "edit_order":
    - intent: "edit_order"
-   - order_id: number or null (Extract the target order ID to update)
-   - part_name: string or null (Only extract if the user specifies a change/update for it)
-   - material: string or null (Only extract if the user specifies a change/update for it)
-   - quantity: number or null (Only extract if the user specifies a change/update for it)
-   - deadline: string or null (Only extract if the user specifies a change/update for it)
-   - dimensions: string or null (Only extract if the user specifies a change/update for it)
+   - order_id: number or null
+   - part_name: string or null
+   - material: string or null
+   - quantity: number or null
+   - deadline: string or null
+   - dimensions: string or null
 
-6. "delete_order":
+7. "delete_order":
    - intent: "delete_order"
-   - order_id: number or null (Extract the target order ID to delete)
+   - order_id: number or null
 
 Rules:
-- If a field is not explicitly requested for creation or modification, set it to null.
-- If no supported intent matches the user message, return: { "intent": null, "message": "Could not understand conversational request." }`;
+- If the message mentions multiple separate orders (different parts, materials, or quantities with separate deadlines), always use "create_multiple_orders".
+- If a field is not explicitly mentioned, set it to null.
+- If no supported intent matches, return: { "intent": null, "message": "Could not understand conversational request." }`;
 
 /**
  * Extracts structured data from user messages using Groq Llama-3.
@@ -74,16 +81,24 @@ export async function extractIntent(message) {
       { role: 'user', content: trimmedMessage }
     ],
     temperature: 0.0,
-    max_tokens: 450,
+    max_tokens: 800,
     response_format: { type: 'json_object' }
   });
 
   const responseText = response.choices[0]?.message?.content || '{}';
   const extractedData = JSON.parse(responseText);
 
-  // Post-process dates for create_order and edit_order
+  // Post-process dates for single create_order / edit_order
   if ((extractedData.intent === 'create_order' || extractedData.intent === 'edit_order') && extractedData.deadline) {
     extractedData.deadline = parseDeadline(extractedData.deadline);
+  }
+
+  // Post-process dates for each order in create_multiple_orders
+  if (extractedData.intent === 'create_multiple_orders' && Array.isArray(extractedData.orders)) {
+    extractedData.orders = extractedData.orders.map(order => ({
+      ...order,
+      deadline: order.deadline ? parseDeadline(order.deadline) : null
+    }));
   }
 
   return {

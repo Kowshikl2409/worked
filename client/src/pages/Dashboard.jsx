@@ -142,6 +142,8 @@ export default function Dashboard() {
         const { intent, order_id } = data.extraction;
         if (intent === 'create_order' && data.affectedOrder)
           pushNotification(`Order #${data.affectedOrder.id} created successfully`, `Order #${data.affectedOrder.id}`);
+        else if (intent === 'create_multiple_orders' && data.affectedOrders?.length > 0)
+          data.affectedOrders.forEach(o => pushNotification(`Order #${o.id} created: ${[o.quantity, o.material, o.part_name].filter(Boolean).join(' ')}`, `Order #${o.id}`));
         else if (intent === 'update_status' && data.affectedOrder) {
           pushNotification(`Order #${order_id} status → ${data.affectedOrder.status}`, `Order #${order_id}`);
           if (selectedOrder?.id === order_id) setSelectedOrder(data.affectedOrder);
