@@ -1,6 +1,5 @@
 {
-    "buildCommand": "npm run build --prefix client",
-    "installCommand": "npm install --prefix client",
+    "buildCommand": "cd client && npm install && npm run build",
     "outputDirectory": "client/dist",
     "rewrites": [
         {
@@ -8,4 +7,5 @@
             "destination": "/index.html"
         }
     ]
-}
+}
+
