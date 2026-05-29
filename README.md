@@ -179,15 +179,7 @@ This project helped me gain practical experience in:
 
 ---
 
-## 👨‍💻 Author
 
-**Aniruddha M V**
-
-Master of Computer Applications (MCA)
-
-GitHub: https://github.com/Aniruddha-M-V
-
----
 
 ## 📄 License
 
